@@ -265,7 +265,6 @@ get '/(.user)/unfollow' => sub {
     $self->redirect_to("/$target");
 };
 
-
 # next comes actions that can only be performed if the user is
 # looking at its own posts (creating and deleting posts),
 # so we do another ladder
@@ -318,20 +317,24 @@ get '/(.user)/post/:id/delete' => sub {
     $self->redirect_to('/' . $self->session('name'));
 };
 
-
 # let's rock and roll!
 app->start;
 
+# <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+# <html xmlns="http://www.w3.org/1999/xhtml">
 
 #------------------------#
 # finally, the templates #
 #------------------------#
 __DATA__
 @@ layouts/main.html.ep
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
   <title>Tweetylicious</title>
   <link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/dark-hive/jquery-ui.css" rel="Stylesheet" />
   <link type="text/css" rel="stylesheet" media="screen" href="/static.css" rel="Stylesheet" />
@@ -340,12 +343,12 @@ __DATA__
   <script type="text/javascript" src="/static.js"></script>
  </head>
  <body>
-  <div id="header"><a href="/"><div id="logo">Tweetylicious!</div></a>
+  <div id="header"><!-- <a href="/"><div id="logo">Tweetylicious!</div></a> -->
    <div class="options">
 % if (session 'name') {
-    <a href="/<%= session 'name' %>">Home</a><a href="/logout">Sign-Out</a>
+    <a href="/<%= session 'name' %>">Home</a> &nbsp; <a href="/logout">Signout</a>
 % } else {
-    <a href="/login">Sign-In</a><a href="/join">Join us!</a>
+    <a href="/login">Signin</a> &nbsp; <a href="/join">Register</a>
 % }
    </div>
    <div class="search ui-widget">
@@ -368,9 +371,10 @@ __DATA__
 % if (session('name') and session('name') eq $user->{username}) {
     <h2>Hi, <%= session 'name' %>!</h2>
    <form id="post" action="<%= url_for %>/post" method="POST">
-    <textarea class="ui-corner-all" cols="50" rows="3" id="message" name="message" tabindex="1"></textarea>
+    <textarea class="ui-corner-all" cols="14" rows="3" id="message" name="message" tabindex="1"></textarea>
     <span id="charsleft"></span>
-    <input id="submit" tabindex="2" type="submit" value="Tell the World!" />
+    <input type="hidden" name="user" value="<%= $user->{username} %>" />
+    <input id="submit" tabindex="2" type="submit" value="Post" />
    </form>
 % } else {
 %   if ( stash 'followed' ) {
@@ -378,6 +382,7 @@ __DATA__
 %   } else {
      <a class="fineprint" href="<%= url_for %>/follow">[+] follow!</a>
 %   }
+
 <h2 id="title"><%= $user->{username} %>'s posts</h2>
 % }
 <ul class="messages">
@@ -386,7 +391,7 @@ __DATA__
     <li class="ui-corner-all">
 %# the author of the post can delete it
 % if ($post->{username} eq session('name') ) {
-        <a href="/<%= $post->{username} %>/post/<%= $post->{id} %>/delete" class="ui-icon ui-icon-trash" title="delete this post"></a>
+        <a href="/<%= $post->{username} %>/post/<%= $post->{id} %>/delete?user=<%= $post->{username} %>" class="ui-icon ui-icon-trash" title="delete this post"></a>
 % }
         <a class="who" href="/<%= $post->{username} %>"><img src="http://www.gravatar.com/avatar/<%= $post->{gravatar} %>?s=60.jpg" /><%= $post->{username} %></a><span class="what"><%= b($post->{content})->decode('UTF-8')->to_string %></span><span class="when"><%= $post->{date} %></span></li>
 % }
@@ -437,7 +442,7 @@ __DATA__
 <div id="content" class="full ui-corner-all">
 <h1>Join us, it's free!</h1>
 % if (my $error = stash 'error') {
- <div class="ui-state-error ui-corner-all" style="width:450px">
+ <div class="ui-state-error ui-corner-all" style="width:150px"> <!-- 450px -->
      <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em"></span><strong>Sorry:</strong> <%= $error %>
  </div>
  <hr />
@@ -479,37 +484,9 @@ __DATA__
 <div id="content" class="info full ui-corner-all">
 
 <h1>What is Tweetylicious?</h1>
-<p>Tweetylicious is a <a href="http://en.wikipedia.org/wiki/Micro-blogging">microblogging</a> web application in a single file! It was built from scratch using state of the art technology, and is meant to demonstrate how easy and fun it is to create your own Web applications in modern Perl 5!</p>
+<p>Tweetylicious is a <a href="http://en.wikipedia.org/wiki/Micro-blogging">microblogging</a> web application.</p>
+<p>This version has been modified slightly for use on mobile devices. For the original project, please see <a href="https://github.com/garu/tweetylicious">github</a>.</p>
 
-<h1>What are its features?</h1>
-<ul>
- <li>Multi-user, with homepages, search and list of followers/following</li>
- <li>Nice, clean, pretty interface (at least I think so :P)</li>
- <li>User avatar images provided by <a href="http://gravatar.com">gravatar</a></li>
- <li>Unicode support</li>
- <li>Well structured, commented code, easy to expand and customize</li>
- <li>Encrypted online sessions</li>
- <li>Uses an actual database (SQLite) and stores encrypted user password</li>
- <li>Free and Open Source Software, released under the same terms as Perl itself.</li>
-</ul>
-
-<h1>How can you fit all that in a 'single file'?! It's gotta be huge and clobbered then!</h1>
-<p>Not at all! Tweetylicious is built on top of Mojolicious::Lite and ORLite, two very simple modules that have absolutely no dependency other than Perl 5 itself. Mojolicious::Lite allows you to create powerful web applications in a very simple and clean fashion, while also letting you integrate your templates on the bottom of the file. ORLite is an extremely lightweight ORM for <a href="http://sqlite.org">SQLite</a> databases that lets you specify your schema on the fly.</p>
-<p>Removing just blank lines and comments, the Model has ~80 lines, the Controller ~110 lines, templates ~170 lines, plus ~90 lines of static css and ~60 of static javascript. And that's the <strong>whole</strong> app.</p>
-<p>But don't take my word for it, just browse through it :)</p>
-
-<h1>What do I need to make it work on my own system?</h1>
-
-<ul>
- <li>Perl 5 <span class="fineprint">(if you're running Linux or Mac, you already have it! Windows users can get it <a href="http://strawberryperl.com">here</a>)<span></li>
- <li>SQLite 3</li>
- <li>Mojolicious</li>
- <li>ORLite</li>
-</ul>
-
-<p>Tweetylicious also relies on the powerful jQuery JavaScript library, but that's downloaded and processed by the clients browser, so don't worry about it. Each user's avatar image is also provided externally, via gravatar.</p>
-
-<p>Have fun!</p>
 </div>
 
 @@ not_found.html.ep
@@ -520,7 +497,7 @@ __DATA__
 
 @@ static.css.ep
   body {
-    width:720px;
+    width: 300px;
     margin:0 auto;
     text-align:center;
     background: #0f1923; /* #333; */
@@ -543,18 +520,18 @@ __DATA__
     color: #eee;
     padding: 50px 10px 10px 10px;
   }
-  .options { text-align: right; margin-left: 450px; margin-top: -5px }
-  .search { float: right; margin-top: 50px }
+  .options { text-align: right; margin-top: -5px }
+  .search { margin-top: 10px; float: right; /* margin-top: 50px */ }
   #search { background-color: #bbb; color: #444; width: 200px; font-size: 16px; }
   #content {
     background: #efe;
     font-family: "Verdana", sans-serif;
     min-height: 100px;
-    padding-left: 10px;
+  /*  padding-left: 10px; */
   }
   h1 { font-size: 1.2em }
   #title { margin-left: 30px; }
-  .half { width: 78.7% }
+  .half { width: 58.7% }
   .full { width: 100% }
   .fineprint { font-size: 0.6em }
   ul { margin: 0; padding: 0; list-style: none; list-style-position: outside; }
@@ -569,9 +546,9 @@ __DATA__
   #content ul.messages li {
     border-top: 1px solid #ddd;
     padding-top: 16px;
-    height: 70px;
     margin-top: 10px;
   }
+.what { display: block; }
   .when { display: block; font-size: 10px; color: #aaa; }
   img { float: left; margin: 1px; border: 0 }
   #content .ui-icon { float: right; position: relative; top: -10px; right: 10px }
@@ -579,7 +556,7 @@ __DATA__
   #content a { text-decoration: none }
   .who { margin-right: 8px; font-weight: bold }
   #sub-section {
-    width: 20%;
+    width: 37%;
     background: #ccc;
     font: 0.8em "Verdana", sans-serif;
   }
@@ -591,10 +568,8 @@ __DATA__
     font-family: sans-serif;
     color: #333;
   }
-  #post {
-    margin: 10px 50px 30px 50px;
-  }
-  #post input { margin-right: 54px; float: right; font-size: 0.6em; }
+  #post { margin: 10px 10px 79px 10px; }
+  #post input { margin-right: 10px; float: right; }
   #charsleft {
     display: block;
     float: left;
@@ -611,9 +586,10 @@ __DATA__
   #followers, #following, #totalposts { clear: both; margin-left: 5px; padding-top: 10px }
   /* safari and opera need this */
   #header,#footer {width:100%}
+  #footer { width: 300px; }
 
   #content,#sub-section {float:left; margin-top: 20px; min-height: 360px; }
-  #footer {clear:left; margin: 20px auto; padding-top: 10px;height: 26px; background: #555; color: #ccc; font-size:12px; text-align: center; }
+  #footer {clear:left; margin: 5px auto; padding: 2px; height: 36px; background: #555; color: #ccc; font-size:10px; text-align: center; }
   #footer a { text-decoration: none; color: #eee }
 
 @@ static.js.ep
@@ -664,7 +640,7 @@ $(function() {
         var item = this;
         var href = $(item).attr("href");
         $.getJSON(href, function(json) {
-          if (json.answer) {
+          if (json && json.answer) {
             $(item).parent("li").hide("explode", {}, 1000);
           }
         });
